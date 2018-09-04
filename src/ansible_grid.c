@@ -239,6 +239,8 @@ void refresh_preset(void) {
 
 	monome_set_quadrant_flag(0);
 	monome_set_quadrant_flag(1);
+	monome_set_quadrant_flag(2);
+	monome_set_quadrant_flag(3);
 }
 
 void grid_keytimer(void) {
@@ -2996,6 +2998,10 @@ void handler_MPGridKey(s32 data) {
 	// print_dbg("; z: 0x");
 	// print_dbg_hex(z);
 
+	if (y > 7) {
+		return; // no 256 support yet
+	}
+
 	//// TRACK LONG PRESSES
 	index = y*16 + x;
 	if(z) {
@@ -3289,6 +3295,8 @@ void handler_MPRefresh(s32 data) {
 
 		monome_set_quadrant_flag(0);
 		monome_set_quadrant_flag(1);
+		monome_set_quadrant_flag(2);
+		monome_set_quadrant_flag(3);
 		(*monome_refresh)();
 	}
 }
@@ -3971,6 +3979,8 @@ void handler_ESRefresh(s32 data) {
         grid_refresh();
         monome_set_quadrant_flag(0);
         monome_set_quadrant_flag(1);
+        monome_set_quadrant_flag(2);
+        monome_set_quadrant_flag(3);
         (*monome_refresh)();
     }
 }
