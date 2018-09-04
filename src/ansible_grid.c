@@ -23,7 +23,6 @@
 #define L0 4
 
 #define GRID_KEY_HOLD_TIME 15
-#define LED_BUFFER_SIZE 256
 #define MAX_HELD_KEYS 32
 #define ES_CHORD_THRESHOLD 30
 
@@ -209,7 +208,7 @@ void handler_GridFrontLong(s32 data) {
 void refresh_preset(void) {
 	u8 i1, i2;//, i3;
 
-	memset(monomeLedBuffer, 0, LED_BUFFER_SIZE);
+	memset(monomeLedBuffer, 0, MONOME_MAX_LED_BYTES);
 
 	for(i1=0;i1<128;i1++)
 		monomeLedBuffer[i1] = 0;
@@ -2045,7 +2044,7 @@ void handler_KriaTrNormal(s32 data) {
 }
 
 void refresh_kria(void) {
-	memset(monomeLedBuffer, 0, LED_BUFFER_SIZE);
+	memset(monomeLedBuffer, 0, MONOME_MAX_LED_BYTES);
 	refresh_kria_view(k_view[0], monomeLedBuffer);
 	refresh_kria_view(k_view[1], monomeLedBuffer + 128);
 }
@@ -2450,7 +2449,7 @@ void refresh_kria_pattern(kria_view_t view, u8* viewBuffer) {
 
 void refresh_kria_config(void) {
 	// clear grid
-	memset(monomeLedBuffer, 0, LED_BUFFER_SIZE);
+	memset(monomeLedBuffer, 0, MONOME_MAX_LED_BYTES);
 
 	uint8_t i = note_sync * 4 + 3;
 
@@ -3379,7 +3378,7 @@ void handler_MPTrNormal(s32 data) {
 
 void refresh_clock(void) {
 	// clear grid
-	memset(monomeLedBuffer, 0, LED_BUFFER_SIZE);
+	memset(monomeLedBuffer, 0, MONOME_MAX_LED_BYTES);
 
 	monomeLedBuffer[clock_count & 0xf] = L0;
 
@@ -3404,7 +3403,7 @@ void refresh_mp_config(void) {
 	u8 c;
 
 	// clear grid
-	memset(monomeLedBuffer, 0, LED_BUFFER_SIZE);
+	memset(monomeLedBuffer, 0, MONOME_MAX_LED_BYTES);
 
 	// voice mode + sound
 	c = L0;
@@ -3460,7 +3459,7 @@ void refresh_mp(void) {
 	u8 i1, i2, i3;
 
 	// clear grid
-	memset(monomeLedBuffer, 0, LED_BUFFER_SIZE);
+	memset(monomeLedBuffer, 0, MONOME_MAX_LED_BYTES);
 
 	// SHOW POSITIONS
 	if(mode == 0) {
