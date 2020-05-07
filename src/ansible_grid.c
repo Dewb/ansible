@@ -242,7 +242,7 @@ void handler_GridFrontLong(s32 data) {
 void refresh_preset(void) {
 	u8 i1, i2;//, i3;
 
-	memset(monomeLedBuffer,0,MAX_KEYS);
+	memset(monomeLedBuffer, 0, MONOME_MAX_LED_BYTES);
 
 	if (!follower_select) {
 		monomeLedBuffer[preset * 16] = 11;
@@ -298,10 +298,14 @@ void refresh_preset(void) {
 
 	monome_set_quadrant_flag(0);
 	monome_set_quadrant_flag(1);
+	if (monome_size_y() == 16) {
+		monome_set_quadrant_flag(2);
+		monome_set_quadrant_flag(3);
+	}
 }
 
 void refresh_grid_tuning(void) {
-	memset(monomeLedBuffer,0,MAX_KEYS);
+	memset(monomeLedBuffer, 0, MONOME_MAX_LED_BYTES);
 
 	for (uint8_t i = 0; i < 4; i++) {
 		monomeLedBuffer[i*16] = tuning_note_on[i] ? L1 : L0;
@@ -2900,7 +2904,7 @@ void refresh_kria_view(kria_view_t* view)
 	const kria_modes_t k_mode = view->mode;
 	//const kria_mod_modes_t k_mod_mode = view->mod_mode;
 
-	memset(monomeLedBuffer,0,128);
+	memset(monomeLedBuffer, 0, 128);
 
 	// bottom strip
 	memset(monomeLedBuffer + R7 + 5, L0, 4);
@@ -3340,7 +3344,7 @@ void refresh_kria_pattern(kria_view_t* view)
 void refresh_kria_config(void)
 {
 	// clear grid
-	memset(monomeLedBuffer,0,MONOME_MAX_LED_BYTES);
+	memset(monomeLedBuffer, 0, MONOME_MAX_LED_BYTES);
 
 	memset(monomeLedBuffer,4, 3);
 	monomeLedBuffer[R0 + (grid_varibrightness == 1 ? 0 :
@@ -4178,6 +4182,10 @@ void handler_MPRefresh(s32 data) {
 
 		monome_set_quadrant_flag(0);
 		monome_set_quadrant_flag(1);
+		if (monome_size_y() == 16) {
+			monome_set_quadrant_flag(2);
+			monome_set_quadrant_flag(3);
+		}
 		(*monome_refresh)();
 	}
 }
@@ -4267,7 +4275,7 @@ void handler_MPTrNormal(s32 data) {
 
 void refresh_clock(void) {
 	// clear grid
-	memset(monomeLedBuffer,0,MONOME_MAX_LED_BYTES);
+	memset(monomeLedBuffer, 0, MONOME_MAX_LED_BYTES);
 
 	monomeLedBuffer[clock_count & 0xf] = L0;
 
@@ -4323,7 +4331,7 @@ void refresh_mp_config(void) {
 	u8 c;
 
 	// clear grid
-	memset(monomeLedBuffer,0,128);
+	memset(monomeLedBuffer, 0, MONOME_MAX_LED_BYTES);
 
 	// voice mode + sound
 	c = L0;
@@ -4379,7 +4387,7 @@ void refresh_mp(void) {
 	u8 i1, i2, i3;
 
 	// clear grid
-	memset(monomeLedBuffer,0,128);
+	memset(monomeLedBuffer, 0, MONOME_MAX_LED_BYTES);
 
 	// SHOW POSITIONS
 	if(mode == 0) {
@@ -4971,8 +4979,12 @@ static void es_load_preset(void) {
 void handler_ESRefresh(s32 data) {
     if(monomeFrameDirty) {
         grid_refresh();
-        monome_set_quadrant_flag(0);
-        monome_set_quadrant_flag(1);
+		monome_set_quadrant_flag(0);
+		monome_set_quadrant_flag(1);
+		if (monome_size_y() == 16) {
+			monome_set_quadrant_flag(2);
+			monome_set_quadrant_flag(3);
+		}
         (*monome_refresh)();
     }
 }
