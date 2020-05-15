@@ -709,7 +709,9 @@ void resume_kria() {
 }
 
 void grid_keytimer_kria(uint8_t held_key) {
-	switch (k_views[0].mode) {
+	u8 k_mode = k_views[held_key < 128 ? 0 : 1].mode;
+	held_key = held_key % 128;
+	switch (k_mode) {
 	case mPattern:
 		if(held_key < 16) {
 			memcpy((void *)&k.p[held_key], &k.p[k.pattern], sizeof(k.p[k.pattern]));
