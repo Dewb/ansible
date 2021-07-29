@@ -4,4 +4,4 @@
 
 #define ANSIBLE_FIRMWARE_NAME "ansible"
 
-json_docdef_t ansible_preset_docdef;
+extern json_docdef_t ansible_preset_docdef;

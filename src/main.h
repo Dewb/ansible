@@ -1,6 +1,7 @@
 #pragma once
 
 #include "timers.h"
+#include "conf_board.h"
 
 #include "ansible_grid.h"
 #include "ansible_arc.h"
@@ -39,7 +40,7 @@ typedef enum {
 } ansible_mode_t;
 // END WARNING
 
-connected_t connected;
+extern connected_t connected;
 
 
 
@@ -59,7 +60,7 @@ typedef struct {
 
 
 // NVRAM data structure located in the flash array.
-typedef const struct {
+typedef struct {
 	uint8_t fresh;
 	ansible_state_t state;
 	kria_state_t kria_state;
@@ -90,10 +91,10 @@ extern softTimer_t auxTimer[4];
 extern uint16_t tuning_table[4][120];
 extern ansible_output_t outputs[4];
 
-void (*clock)(u8 phase);
-void init_tuning(void);
-void default_tuning(void);
-void fit_tuning(int mode);
+extern void (*clock)(u8 phase);
+extern void init_tuning(void);
+extern void default_tuning(void);
+extern void fit_tuning(int mode);
 
 extern void handler_None(s32 data);
 extern void clock_null(u8 phase);

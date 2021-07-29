@@ -73,12 +73,19 @@ usb flash
 
 uint8_t front_timer;
 
-uint8_t preset_mode;
-
+#ifdef TARGET
 __attribute__((__section__(".flash_nvram")))
 nvram_data_t f;
+#else
+nvram_data_t f;
+#ifdef DECLARE_NVRAM
+DECLARE_NVRAM(&f, sizeof(nvram_data_t))
+#endif
+#endif
 
 ansible_mode_t ansible_mode;
+
+connected_t connected;
 
 bool leader_mode = false;
 uint16_t aux_param[2][4] = { { 0 } };
@@ -91,7 +98,7 @@ extern void timers_set_monome(void);
 extern void timers_unset_monome(void);
 
 // check the event queue
-static void check_events(void);
+void check_events(void);
 
 // handler protos
 static void handler_KeyTimer(s32 data);
@@ -132,6 +139,7 @@ uint16_t tuning_table[4][120];
 ansible_output_t outputs[4];
 
 static uint8_t clock_phase;
+void (*clock)(u8 phase);
 
 void handler_None(s32 data) { ;; }
 
@@ -796,7 +804,7 @@ static uint8_t ii_ansible_cmd_for_mode(ansible_mode_t mode) {
 ////////////////////////////////////////////////////////////////////////////////
 // main
 
-int main(void)
+int initialize_module(void)
 {
 	sysclk_init();
 
@@ -862,8 +870,12 @@ int main(void)
 
 	init_usb_host();
 	init_monome();
+}
 
-  while (true) {
-    check_events();
-  }
+int main() {
+    initialize_module();
+    while (true)
+    {
+        check_events();
+    }
 }
