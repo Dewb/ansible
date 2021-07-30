@@ -5368,7 +5368,7 @@ void refresh_es(void) {
         u8 pos;
         if (clock_external)
             pos = e.p[e.p_select].length ? (es_pos << 4) / (e.p[e.p_select].length - 1) : 0;
-        else
+        else if (es_p_total)
             pos = ((get_ticks() - es_p_start) << 4) / es_p_total;
         if (e.p[e.p_select].dir) pos = 15 - pos;
         for (u8 i = 1; i < 16; i++)
