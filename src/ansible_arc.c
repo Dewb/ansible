@@ -285,13 +285,13 @@ void handler_ArcPresetKey(s32 data) {
 		switch(ansible_mode) {
 		case mArcLevels:
 			flashc_memset8((void*)&(f.levels_state.preset), arc_preset, 1, true);
-			init_levels();
+			init_levels(&f);
 			arc_leave_preset();
 			resume_levels();
 			break;
 		case mArcCycles:
 			flashc_memset8((void*)&(f.cycles_state.preset), arc_preset, 1, true);
-			init_cycles();
+			init_cycles(&f);
 			arc_leave_preset();
 			resume_cycles();
 			break;
@@ -385,29 +385,58 @@ void default_levels() {
 	// flashc_memcpy_memset32((void*)&(f.levels_state.clock_period), 250, 4, true);
 }
 
-void init_levels() {
+void init_levels(nvram_data_t* fp) {
 	uint8_t i1, i2;
 
-	arc_preset = f.levels_state.preset;
+	arc_preset = fp->levels_state.preset;
 
-	l.now = f.levels_state.l[arc_preset].now;
-	l.start = f.levels_state.l[arc_preset].start;
-	l.len = f.levels_state.l[arc_preset].len;
-	l.dir = f.levels_state.l[arc_preset].dir;
+	l.now = fp->levels_state.l[arc_preset].now;
+	l.start = fp->levels_state.l[arc_preset].start;
+	l.len = fp->levels_state.l[arc_preset].len;
+	l.dir = fp->levels_state.l[arc_preset].dir;
 
 	for(i1=0;i1<4;i1++) {
 		for(i2=0;i2<16;i2++) {
-			l.pattern[i1][i2] = f.levels_state.l[arc_preset].pattern[i1][i2];
-			l.note[i1][i2] = f.levels_state.l[arc_preset].note[i1][i2];
+			l.pattern[i1][i2] = fp->levels_state.l[arc_preset].pattern[i1][i2];
+			l.note[i1][i2] = fp->levels_state.l[arc_preset].note[i1][i2];
 		}
 
-		l.mode[i1] = f.levels_state.l[arc_preset].mode[i1];
-		l.all[i1] = f.levels_state.l[arc_preset].all[i1];
-		l.scale[i1] = f.levels_state.l[arc_preset].scale[i1];
-		l.octave[i1] = f.levels_state.l[arc_preset].octave[i1];
-		l.offset[i1] = f.levels_state.l[arc_preset].offset[i1];
-		l.range[i1] = f.levels_state.l[arc_preset].range[i1];
-		l.slew[i1] = f.levels_state.l[arc_preset].slew[i1];
+		l.mode[i1] = fp->levels_state.l[arc_preset].mode[i1];
+		l.all[i1] = fp->levels_state.l[arc_preset].all[i1];
+		l.scale[i1] = fp->levels_state.l[arc_preset].scale[i1];
+		l.octave[i1] = fp->levels_state.l[arc_preset].octave[i1];
+		l.offset[i1] = fp->levels_state.l[arc_preset].offset[i1];
+		l.range[i1] = fp->levels_state.l[arc_preset].range[i1];
+		l.slew[i1] = fp->levels_state.l[arc_preset].slew[i1];
+	}
+}
+
+void save_levels(nvram_data_t* fp)
+{
+	uint8_t i1, i2;
+
+	fp->levels_state.preset = arc_preset;
+
+	fp->levels_state.l[arc_preset].now = l.now;
+	fp->levels_state.l[arc_preset].start = l.start;
+	fp->levels_state.l[arc_preset].len = l.len;
+	fp->levels_state.l[arc_preset].dir = l.dir;
+
+	for (i1 = 0; i1 < 4; i1++)
+	{
+		for (i2 = 0; i2 < 16; i2++)
+		{
+			fp->levels_state.l[arc_preset].pattern[i1][i2] = l.pattern[i1][i2];
+			fp->levels_state.l[arc_preset].note[i1][i2] = l.note[i1][i2];
+		}
+
+		fp->levels_state.l[arc_preset].mode[i1] = l.mode[i1];
+		fp->levels_state.l[arc_preset].all[i1] = l.all[i1];
+		fp->levels_state.l[arc_preset].scale[i1] = l.scale[i1];
+		fp->levels_state.l[arc_preset].octave[i1] = l.octave[i1];
+		fp->levels_state.l[arc_preset].offset[i1] = l.offset[i1];
+		fp->levels_state.l[arc_preset].range[i1] = l.range[i1];
+		fp->levels_state.l[arc_preset].slew[i1] = l.slew[i1];
 	}
 }
 
@@ -592,7 +621,7 @@ void ii_levels(uint8_t *d, uint8_t len) {
 			if(d[1] > -1 && d[1] < 8) {
 				arc_preset = d[1];
 				flashc_memset8((void*)&(f.levels_state.preset), arc_preset, 1, true);
-				init_levels();
+				init_levels(&f);
 				monomeFrameDirty++;
 			}
 			break;
@@ -1395,22 +1424,44 @@ void default_cycles() {
 
 }
 
-void init_cycles() {
-	uint8_t i1;
+void init_cycles(nvram_data_t* fp)
+{
+    uint8_t i1;
 
-	arc_preset = f.cycles_state.preset;
+	arc_preset = fp->cycles_state.preset;
 
-	c.mode = f.cycles_state.c[arc_preset].mode;
-	c.shape = f.cycles_state.c[arc_preset].shape;
-	c.friction = f.cycles_state.c[arc_preset].friction;
-	c.force = f.cycles_state.c[arc_preset].force;
+	c.mode = fp->cycles_state.c[arc_preset].mode;
+	c.shape = fp->cycles_state.c[arc_preset].shape;
+	c.friction = fp->cycles_state.c[arc_preset].friction;
+	c.force = fp->cycles_state.c[arc_preset].force;
 
 	for(i1=0;i1<4;i1++) {
-		c.pos[i1] = f.cycles_state.c[arc_preset].pos[i1];
-		c.speed[i1] = f.cycles_state.c[arc_preset].speed[i1];
-		c.mult[i1] = f.cycles_state.c[arc_preset].mult[i1];
-		c.range[i1] = f.cycles_state.c[arc_preset].range[i1];
-		c.div[i1] = f.cycles_state.c[arc_preset].div[i1];
+		c.pos[i1] = fp->cycles_state.c[arc_preset].pos[i1];
+		c.speed[i1] = fp->cycles_state.c[arc_preset].speed[i1];
+		c.mult[i1] = fp->cycles_state.c[arc_preset].mult[i1];
+		c.range[i1] = fp->cycles_state.c[arc_preset].range[i1];
+		c.div[i1] = fp->cycles_state.c[arc_preset].div[i1];
+	}
+}
+
+void save_cycles(nvram_data_t* fp)
+{
+	uint8_t i1;
+
+	fp->cycles_state.preset = arc_preset;
+
+	fp->cycles_state.c[arc_preset].mode = c.mode;
+	fp->cycles_state.c[arc_preset].shape = c.shape;
+	fp->cycles_state.c[arc_preset].friction = c.friction;
+	fp->cycles_state.c[arc_preset].force = c.force;
+
+	for (i1 = 0; i1 < 4; i1++)
+	{
+		fp->cycles_state.c[arc_preset].pos[i1] = c.pos[i1];
+		fp->cycles_state.c[arc_preset].speed[i1] = c.speed[i1];
+		fp->cycles_state.c[arc_preset].mult[i1] = c.mult[i1];
+		fp->cycles_state.c[arc_preset].range[i1] = c.range[i1];
+		fp->cycles_state.c[arc_preset].div[i1] = c.div[i1];
 	}
 }
 
@@ -1501,7 +1552,7 @@ void ii_cycles(uint8_t *d, uint8_t len) {
 			if(d[1] > -1 && d[1] < 8) {
 				arc_preset = d[1];
 				flashc_memset8((void*)&(f.cycles_state.preset), arc_preset, 1, true);
-				init_cycles();
+				init_cycles(&f);
 				monomeFrameDirty++;
 			}
 			break;

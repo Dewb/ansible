@@ -223,7 +223,6 @@ void grid_keytimer(void);
 void ii_grid(uint8_t* data, uint8_t len);
 
 void default_kria(void);
-void init_kria(void);
 void resume_kria(void);
 void clock_kria(uint8_t phase);
 void clock_kria_track( uint8_t trackNum );
@@ -248,7 +247,6 @@ void refresh_kria_pattern(kria_view_t* view);
 void refresh_kria_config(void);
 
 void default_mp(void);
-void init_mp(void);
 void resume_mp(void);
 void clock_mp(uint8_t phase);
 void ii_mp(uint8_t *d, uint8_t l);
@@ -262,7 +260,6 @@ void refresh_mp_config(void);
 void refresh_clock(void);
 
 void default_es(void);
-void init_es(void);
 void resume_es(void);
 void handler_ESGridKey(s32 data);
 void handler_ESRefresh(s32 data);

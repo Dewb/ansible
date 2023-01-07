@@ -58,7 +58,6 @@ void handler_ArcPresetKey(s32 data);
 void ii_arc(uint8_t* data, uint8_t len);
 
 void default_levels(void);
-void init_levels(void);
 void resume_levels(void);
 void clock_levels(uint8_t phase);
 void ii_levels(uint8_t *d, uint8_t l);
@@ -72,7 +71,6 @@ void handler_LevelsTr(s32 data);
 void handler_LevelsTrNormal(s32 data);
 
 void default_cycles(void);
-void init_cycles(void);
 void resume_cycles(void);
 void clock_cycles(uint8_t phase);
 void ii_cycles(uint8_t *d, uint8_t l);

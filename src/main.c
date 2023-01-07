@@ -485,8 +485,12 @@ void default_tuning(void) {
 	flashc_memcpy((void *)f.tuning_table, tuning_table, sizeof(tuning_table), true);
 }
 
-void init_tuning(void) {
-	memcpy((void *)&tuning_table, &f.tuning_table, sizeof(tuning_table));
+void init_tuning(nvram_data_t* fp) {
+	memcpy((void *)&tuning_table, fp->tuning_table, sizeof(tuning_table));
+}
+
+void save_tuning(nvram_data_t* fp) {
+	memcpy(fp->tuning_table, (void *)&tuning_table, sizeof(tuning_table));
 }
 
 void fit_tuning(int mode) {
@@ -712,12 +716,12 @@ void clock_set_tr(uint32_t n, uint8_t phase) {
 ///////
 // global ii handlers
 void load_flash_state(void) {
-	init_tuning();
-	init_levels();
-	init_cycles();
-	init_kria();
-	init_mp();
-	init_es();
+	init_tuning(&f);
+	init_levels(&f);
+	init_cycles(&f);
+	init_kria(&f);
+	init_mp(&f);
+	init_es(&f);
 	init_tt();
 
 	print_dbg("\r\ni2c addr: ");

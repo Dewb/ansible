@@ -92,7 +92,8 @@ extern uint16_t tuning_table[4][120];
 extern ansible_output_t outputs[4];
 
 extern void (*clock)(u8 phase);
-extern void init_tuning(void);
+extern void init_tuning(nvram_data_t* fp);
+extern void save_tuning(nvram_data_t* fp);
 extern void default_tuning(void);
 extern void fit_tuning(int mode);
 
@@ -118,3 +119,14 @@ void clock_set_tr(uint32_t n, uint8_t phase);
 void ii_ansible(uint8_t* d, uint8_t len);
 void load_flash_state(void);
 void flash_unfresh(void);
+
+void init_levels(nvram_data_t* fp);
+void save_levels(nvram_data_t* fp);
+void init_cycles(nvram_data_t* fp);
+void save_cycles(nvram_data_t* fp);
+void init_kria(nvram_data_t* fp);
+void save_kria(nvram_data_t* fp);
+void init_mp(nvram_data_t* fp);
+void save_mp(nvram_data_t* fp);
+void init_es(nvram_data_t* fp);
+void save_es(nvram_data_t* fp);

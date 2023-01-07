@@ -664,7 +664,7 @@ void default_kria() {
 		flashc_memcpy((void *)&f.kria_state.k[i1], &k, sizeof(k), true);
 }
 
-void init_kria() {
+void init_kria(nvram_data_t* fp) {
 
 	k_views[0].track = 0;
 	k_views[0].mode = mTr;
@@ -678,33 +678,64 @@ void init_kria() {
 	k_views[1].mode_is_alt = false;
 	k_views[1].buffer = monomeLedBuffer + 128;
 
-	note_sync = f.kria_state.note_sync;
-	loop_sync = f.kria_state.loop_sync;
-	note_div_sync = f.kria_state.note_div_sync;
-	div_sync = f.kria_state.div_sync;
-	cue_div = f.kria_state.cue_div;
-	cue_steps = f.kria_state.cue_steps;
-	meta_reset_all = f.kria_state.meta_reset_all;
-	dur_tie_mode = f.kria_state.dur_tie_mode;
+	note_sync = fp->kria_state.note_sync;
+	loop_sync = fp->kria_state.loop_sync;
+	note_div_sync = fp->kria_state.note_div_sync;
+	div_sync = fp->kria_state.div_sync;
+	cue_div = fp->kria_state.cue_div;
+	cue_steps = fp->kria_state.cue_steps;
+	meta_reset_all = fp->kria_state.meta_reset_all;
+	dur_tie_mode = fp->kria_state.dur_tie_mode;
 
-	preset = f.kria_state.preset;
+	preset = fp->kria_state.preset;
 
-	k.pattern = f.kria_state.k[preset].pattern;
+	k.pattern = fp->kria_state.k[preset].pattern;
 	edit_pattern = k.pattern;
 
-	k = f.kria_state.k[preset];
+	k = fp->kria_state.k[preset];
 
 	clock_mul = 1;
 
-	clock_period = f.kria_state.clock_period;
-	kria_sync_mode = f.kria_state.sync_mode;
+	clock_period = fp->kria_state.clock_period;
+	kria_sync_mode = fp->kria_state.sync_mode;
 	time_rough = (clock_period - 20) / 16;
 	time_fine = (clock_period - 20) % 16;
 
 	for ( int i=0; i<4; i++ ) {
 		last_ticks[i] = get_ticks();
 		for (int j=0;j<KRIA_NUM_PARAMS;j++) {
-			tmul[i][j] = f.kria_state.k[preset].p[k.pattern].t[i].tmul[j];
+			tmul[i][j] = fp->kria_state.k[preset].p[k.pattern].t[i].tmul[j];
+		}
+	}
+}
+
+void save_kria(nvram_data_t* fp)
+{
+	fp->kria_state.note_sync = note_sync;
+	fp->kria_state.loop_sync = loop_sync;
+
+	fp->kria_state.note_div_sync = note_div_sync;
+	fp->kria_state.div_sync = div_sync;
+	fp->kria_state.cue_div = cue_div;
+	fp->kria_state.cue_steps = cue_steps;
+	fp->kria_state.meta_reset_all = meta_reset_all;
+	fp->kria_state.dur_tie_mode = dur_tie_mode;
+
+	fp->kria_state.preset = preset;
+
+	fp->kria_state.k[preset].pattern = k.pattern;
+	k.pattern = edit_pattern;
+
+	fp->kria_state.k[preset] = k;
+
+	fp->kria_state.clock_period = clock_period;
+	fp->kria_state.sync_mode = kria_sync_mode;
+
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < KRIA_NUM_PARAMS; j++)
+		{
+			fp->kria_state.k[preset].p[k.pattern].t[i].tmul[j] = tmul[i][j];
 		}
 	}
 }
@@ -1125,7 +1156,7 @@ void ii_kria(uint8_t *d, uint8_t l) {
 			if(d[1] > -1 && d[1] < 8) {
 				preset = d[1];
 				flashc_memset8((void*)&(f.kria_state.preset), preset, 1, true);
-				init_kria();
+				init_kria(&f);
 				resume_kria();
 			}
 			break;
@@ -1776,7 +1807,7 @@ void handler_KriaGridKey(s32 data) {
 					else if(y == preset) {
 						// flash read
 						flashc_memset8((void*)&(f.kria_state.preset), preset, 1, true);
-						init_kria();
+						init_kria(&f);
 						resume_kria();
 
 						preset_mode_exit();
@@ -1790,7 +1821,7 @@ void handler_KriaGridKey(s32 data) {
 			else if(view_tuning) {
 				if (y == 5) {
 					if (x == 11) {
-						init_tuning();
+						init_tuning(&f);
 						restore_grid_tuning();
 					} else if (x == 13) {
 						fit_tuning(0);
@@ -3589,14 +3620,14 @@ void default_mp() {
 	}
 }
 
-void init_mp() {
-	sound = f.mp_state.sound;
-	voice_mode = f.mp_state.voice_mode;
+void init_mp(nvram_data_t* fp) {
+	sound = fp->mp_state.sound;
+	voice_mode = fp->mp_state.voice_mode;
 
-	preset = f.mp_state.preset;
+	preset = fp->mp_state.preset;
 
 	for(uint8_t i1=0;i1<8;i1++) {
-		m = f.mp_state.m[preset];
+		m = fp->mp_state.m[preset];
 
 		// m.count[i1] = f.mp_state.m[preset].count[i1];
 		// m.speed[i1] = f.mp_state.m[preset].speed[i1];
@@ -3611,7 +3642,7 @@ void init_mp() {
 		// m.smin[i1] = f.mp_state.m[preset].smin[i1];
 		// m.smax[i1] = f.mp_state.m[preset].smax[i1];
 
-		position[i1] = f.mp_state.m[preset].count[i1];
+		position[i1] = fp->mp_state.m[preset].count[i1];
 		tick[i1] = 0;
 		pushed[i1] = 0;
 		scount[i1] = 0;
@@ -3632,6 +3663,24 @@ void init_mp() {
 	note_now[1] = -1;
 	note_now[2] = -1;
 	note_now[3] = -1;
+}
+
+void save_mp(nvram_data_t* fp)
+{
+	fp->mp_state.sound = sound;
+	fp->mp_state.voice_mode = voice_mode;
+
+	fp->mp_state.preset = preset;
+
+	for (uint8_t i1 = 0; i1 < 8; i1++)
+	{
+		fp->mp_state.m[preset] = m;
+		fp->mp_state.m[preset].count[i1] = position[i1];
+	}
+
+	f.mp_state.m[preset].scale = m.scale;
+
+	memcpy(f.scale, scale_data, sizeof(scale_data));
 }
 
 void resume_mp() {
@@ -3942,7 +3991,7 @@ void ii_mp(uint8_t *d, uint8_t l) {
 			if(d[1] > -1 && d[1] < 8) {
 				preset = d[1];
 				flashc_memset8((void*)&(f.mp_state.preset), preset, 1, true);
-				init_mp();
+				init_mp(&f);
 			}
 			break;
 		case II_MP_PRESET + II_GET:
@@ -4050,7 +4099,7 @@ void handler_MPGridKey(s32 data) {
  					else if(y == preset) {
  						// flash read
 						flashc_memset8((void*)&(f.mp_state.preset), preset, 1, true);
-						init_mp();
+						init_mp(&f);
 
 						preset_mode_exit();
 						grid_refresh = &refresh_mp;
@@ -5059,14 +5108,22 @@ void default_es(void) {
         flashc_memcpy((void *)&f.es_state.e[i], &e, sizeof(e), true);
 }
 
-void init_es(void) {
-    preset = f.es_state.preset;
-    e = f.es_state.e[preset];
+void init_es(nvram_data_t* fp) {
+    preset = fp->es_state.preset;
+    e = fp->es_state.e[preset];
     es_mode = es_stopped;
     es_view = es_main;
 
-	memcpy(scale_data, f.scale, sizeof(scale_data));
+	memcpy(scale_data, fp->scale, sizeof(scale_data));
 	if (e.scale < 16) calc_scale(e.scale);
+}
+
+void save_es(nvram_data_t* fp)
+{
+	fp->es_state.preset = preset;
+	fp->es_state.e[preset] = e;
+
+	memcpy(fp->scale, scale_data, sizeof(scale_data));
 }
 
 void resume_es(void) {
@@ -5095,7 +5152,7 @@ void resume_es(void) {
 
 static void es_load_preset(void) {
     flashc_memset8((void*)&(f.es_state.preset), preset, 1, true);
-    init_es();
+    init_es(&f);
     resume_es();
 }
 
