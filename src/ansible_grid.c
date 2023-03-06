@@ -139,7 +139,7 @@ void set_mode_grid() {
 		app_event_handlers[kEventTrNormal] = &handler_KriaTrNormal;
 		app_event_handlers[kEventMonomeGridKey] = &handler_KriaGridKey;
 		app_event_handlers[kEventMonomeRefresh] = &handler_KriaRefresh;
-		clock = &clock_kria;
+		clock_fn = &clock_kria;
 		clock_set(clock_period);
 		if (!leader_mode) init_i2c_follower(II_KR_ADDR);
 		process_ii = &ii_kria;
@@ -153,7 +153,7 @@ void set_mode_grid() {
 		app_event_handlers[kEventTrNormal] = &handler_MPTrNormal;
 		app_event_handlers[kEventMonomeGridKey] = &handler_MPGridKey;
 		app_event_handlers[kEventMonomeRefresh] = &handler_MPRefresh;
-		clock = &clock_mp;
+		clock_fn = &clock_mp;
 		clock_set(clock_period);
 		if (!leader_mode) init_i2c_follower(II_MP_ADDR);
 		process_ii = &ii_mp;
@@ -167,7 +167,7 @@ void set_mode_grid() {
 		app_event_handlers[kEventTrNormal] = &handler_ESTrNormal;
 		app_event_handlers[kEventMonomeGridKey] = &handler_ESGridKey;
 		app_event_handlers[kEventMonomeRefresh] = &handler_ESRefresh;
-		clock = &clock_null;
+		clock_fn = &clock_null;
 		clock_set(clock_period);
 		if (!leader_mode) init_i2c_follower(ES);
 		process_ii = &ii_es;
@@ -753,9 +753,9 @@ void resume_kria() {
 	clock_external = !gpio_get_pin_value(B10);
 
 	if(clock_external)
-		clock = &clock_null;
+		clock_fn = &clock_null;
 	else
-		clock = &clock_kria;
+		clock_fn = &clock_kria;
 
 	for ( int i=0; i<4; i++ ) {
 		last_ticks[i] = get_ticks();
@@ -3027,9 +3027,9 @@ void handler_KriaTrNormal(s32 data) {
 	clock_external = data;
 
 	if(clock_external)
-		clock = &clock_null;
+		clock_fn = &clock_null;
 	else
-		clock = &clock_kria;
+		clock_fn = &clock_kria;
 
 	monomeFrameDirty++;
 }
@@ -3695,9 +3695,9 @@ void resume_mp() {
 	clock_external = !gpio_get_pin_value(B10);
 
 	if(clock_external)
-		clock = &clock_null;
+		clock_fn = &clock_null;
 	else
-		clock = &clock_mp;
+		clock_fn = &clock_mp;
 
 	reset_outputs();
 
@@ -4440,9 +4440,9 @@ void handler_MPTrNormal(s32 data) {
 	clock_external = data;
 
 	if(clock_external)
-		clock = &clock_null;
+		clock_fn = &clock_null;
 	else
-		clock = &clock_mp;
+		clock_fn = &clock_mp;
 
 	monomeFrameDirty++;
 }
@@ -5135,7 +5135,7 @@ void resume_es(void) {
 
     // re-check clock jack
     clock_external = !gpio_get_pin_value(B10);
-    clock = &clock_null;
+    clock_fn = &clock_null;
 
     reset_outputs();
     for (u8 i = 0; i < 4; i++) {

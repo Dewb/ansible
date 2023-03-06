@@ -239,7 +239,7 @@ void set_mode_midi(void) {
 		app_event_handlers[kEventTrNormal] = &handler_ArpTrNormal;
 		app_event_handlers[kEventMidiPacket] = &handler_ArpMidiPacket;
 		restore_midi_arp();
-		clock = &clock_midi_arp;
+		clock_fn = &clock_midi_arp;
 		clock_set(arp_state.clock_period);
 		if (!leader_mode) init_i2c_follower(II_ARP_ADDR);
 		process_ii = &ii_midi_arp;
@@ -381,7 +381,7 @@ static void set_voice_allocation(voicing_mode v) {
 		active_behavior.seq_continue = NULL;
 		active_behavior.panic = &poly_panic;
 		voice_slot_init(&voice_state, kVoiceAllocRotate, 4); // TODO: count configurable?
-		clock = &clock_null;
+		clock_fn = &clock_null;
 		print_dbg("\r\n standard: voice poly");
 		break;
 	case eVoiceMono:
@@ -395,7 +395,7 @@ static void set_voice_allocation(voicing_mode v) {
 		active_behavior.seq_stop = &mono_rt_stop;
 		active_behavior.seq_continue = &mono_rt_continue;
 		active_behavior.panic = &mono_panic;
-		clock = &clock_null;
+		clock_fn = &clock_null;
 		flags[0].legato = 1;
 		mono_pitch_bend(0, MIDI_BEND_ZERO);
 		print_dbg("\r\n standard: voice mono");
@@ -411,7 +411,7 @@ static void set_voice_allocation(voicing_mode v) {
 		active_behavior.seq_stop = NULL;
 		active_behavior.seq_continue = NULL;
 		active_behavior.panic = &reset;
-		clock = &clock_null;
+		clock_fn = &clock_null;
 		flags[0].legato = flags[1].legato = flags[2].legato = flags[3].legato = 1;
 		print_dbg("\r\n standard: voice multi");
 		break;
@@ -426,7 +426,7 @@ static void set_voice_allocation(voicing_mode v) {
 		active_behavior.seq_stop = NULL;
 		active_behavior.seq_continue = NULL;
 		active_behavior.panic = &reset;
-		clock = &clock_null;
+		clock_fn = &clock_null;
 		print_dbg("\r\n standard: voice fixed");
 		break;
 	default:

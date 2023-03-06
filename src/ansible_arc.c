@@ -76,8 +76,8 @@ void set_mode_arc(void) {
 		app_event_handlers[kEventTrNormal] = &handler_LevelsTrNormal;
 		app_event_handlers[kEventMonomeRingEnc] = &handler_LevelsEnc;
 		app_event_handlers[kEventMonomeRefresh] = &handler_LevelsRefresh;
-		clock = &clock_null;
-		// clock = &clock_levels;
+		clock_fn = &clock_null;
+		// clock_fn = &clock_levels;
 		// clock_set(f.levels_state.clock_period);
 		if (!leader_mode) init_i2c_follower(II_LV_ADDR);
 		process_ii = &ii_levels;
@@ -91,7 +91,7 @@ void set_mode_arc(void) {
 		app_event_handlers[kEventTrNormal] = &handler_CyclesTrNormal;
 		app_event_handlers[kEventMonomeRingEnc] = &handler_CyclesEnc;
 		app_event_handlers[kEventMonomeRefresh] = &handler_CyclesRefresh;
-		clock = &clock_cycles;
+		clock_fn = &clock_cycles;
 		// 24
 		clock_set(DAC_RATE_CV << 3);
 		if (!leader_mode) init_i2c_follower(II_CY_ADDR);

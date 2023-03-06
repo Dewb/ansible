@@ -139,7 +139,7 @@ uint16_t tuning_table[4][120];
 ansible_output_t outputs[4];
 
 static uint8_t clock_phase;
-void (*clock)(u8 phase);
+void (*clock_fn)(u8 phase);
 
 void handler_None(s32 data) { ;; }
 
@@ -147,7 +147,7 @@ static void clockTimer_callback(void* o) {
 	clock_phase++;
 	if(clock_phase > 1)
 		clock_phase = 0;
-	clock(clock_phase);
+	clock_fn(clock_phase);
 }
 
 static void keyTimer_callback(void* o) {
@@ -865,7 +865,7 @@ int initialize_module(void)
 	clr_tr(TR3);
 	clr_tr(TR4);
 
-	clock = &clock_null;
+	clock_fn = &clock_null;
 
 	timer_add(&clockTimer,1000,&clockTimer_callback, NULL);
 	timer_add(&keyTimer,50,&keyTimer_callback, NULL);

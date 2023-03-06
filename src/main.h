@@ -91,7 +91,7 @@ extern softTimer_t auxTimer[4];
 extern uint16_t tuning_table[4][120];
 extern ansible_output_t outputs[4];
 
-extern void (*clock)(u8 phase);
+extern void (*clock_fn)(u8 phase);
 extern void init_tuning(nvram_data_t* fp);
 extern void save_tuning(nvram_data_t* fp);
 extern void default_tuning(void);
