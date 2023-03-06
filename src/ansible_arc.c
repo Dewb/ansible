@@ -1356,7 +1356,9 @@ void handler_LevelsTrNormal(s32 data) {
 
 
 static void levels_pattern_next() {
-	pattern_pos = (pattern_pos + 1) % l.len;
+	if (l.len > 0)
+		pattern_pos = (pattern_pos + 1) % l.len;
+
 	if(l.dir)
 		l.now = (16 + l.start - pattern_pos) % 0xf;
 	else
