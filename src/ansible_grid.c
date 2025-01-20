@@ -3545,10 +3545,11 @@ void refresh_kria_config(void)
 #define MP_4V 2
 #define MP_8T 3
 
-
-u8 edit_row;
+u8 upper_edit_row = 0;
+u8 lower_edit_row = 0;
 u8 mode = 0;
 u8 prev_mode = 0;
+u8 lower_mode = 1;
 s8 kcount = 0;
 s8 scount[8];
 u8 state[8];
@@ -4057,19 +4058,18 @@ void ii_mp(uint8_t *d, uint8_t l) {
 	}
 }
 
-void handler_MPGridKey(s32 data) {
-	u8 x, y, z, index, i1, found;
-	monome_grid_key_parse_event_data(data, &x, &y, &z);
-	// print_dbg("\r\n monome event; x: ");
-	// print_dbg_hex(x);
-	// print_dbg("; y: 0x");
-	// print_dbg_hex(y);
-	// print_dbg("; z: 0x");
-	// print_dbg_hex(z);
+void handler_MPGridKey_helper_speed(u8 x, u8 y, u8 z, u8 edit_mode);
+void handler_MPGridKey_helper_rules(u8 x, u8 y, u8 z, u8 edit_mode);
 
-	if (y > 7) {
-		return;
-	}
+void handler_MPGridKey(s32 data) {
+    u8 x, y, z, index, i1, found;
+    monome_grid_key_parse_event_data(data, &x, &y, &z);
+    // print_dbg("\r\n monome event; x: ");
+    // print_dbg_hex(x);
+    // print_dbg("; y: 0x");
+    // print_dbg_hex(y);
+    // print_dbg("; z: 0x");
+    // print_dbg_hex(z);
 
 	//// TRACK LONG PRESSES
 	index = y*16 + x;
@@ -4127,6 +4127,10 @@ void handler_MPGridKey(s32 data) {
 		preset_mode_handle_key(x, y, z, m.glyph);
 	}
 	else if(view_clock) {
+		if (y > 7) {
+			return;
+		}
+
 		if(z) {
 			if(clock_external) {
 				if(y==1) {
@@ -4187,6 +4191,10 @@ void handler_MPGridKey(s32 data) {
 
 	}
 	else if(view_config) {
+		if (y > 7) {
+			return;
+		}
+
 		if(z) {
 			if(y < 6 && x < 8) {
 				switch(x) {
@@ -4234,123 +4242,154 @@ void handler_MPGridKey(s32 data) {
 	}
 	// NORMAL
 	else {
-		prev_mode = mode;
+		if (y < 8) {
+			prev_mode = mode;
+			
+			// mode check
+			if(x == 0) {
+				kcount += (z<<1)-1;
 
-		// mode check
-		if(x == 0) {
-			kcount += (z<<1)-1;
+				if(kcount < 0)
+					kcount = 0;
 
-			if(kcount < 0)
-				kcount = 0;
+				// print_dbg("\r\nkey count: ");
+				// print_dbg_ulong(kcount);
 
-			// print_dbg("\r\nkey count: ");
-			// print_dbg_ulong(kcount);
+				if(kcount == 1 && z == 1)
+					mode = 1;
+				else if(kcount == 0) {
+					mode = 0;
+					scount[y] = 0;
+				}
 
-			if(kcount == 1 && z == 1)
-				mode = 1;
-			else if(kcount == 0) {
-				mode = 0;
-				scount[y] = 0;
-			}
-
-			if(z == 1 && mode == 1) {
-				edit_row = y;
-			}
-		}
-		else if(x == 1 && mode != 0) {
-			if(mode == 1 && z == 1) {
-				mode = 2;
-				edit_row = y;
-			}
-			else if(mode == 2 && z == 0)
-				mode = 1;
-		}
-		// set position / minmax / stop
-		else if(mode == 0) {
-			scount[y] += (z<<1)-1;
-			if(scount[y]<0) scount[y] = 0;		// in case of grid glitch?
-
-			if(z == 1 && scount[y] == 1) {
-				position[y] = x;
-				m.count[y] = x;
-				m.min[y] = x;
-				m.max[y] = x;
-				tick[y] = m.speed[y];
-
-				if(sound) {
-					pushed[y] = 1;
+				if(z == 1 && mode == 1) {
+					upper_edit_row = y;
 				}
 			}
-			else if(z == 1 && scount[y] == 2) {
-				if(x < m.count[y]) {
+			else if(x == 1 && mode != 0) {
+				if(mode == 1 && z == 1) {
+					mode = 2;
+					upper_edit_row = y;
+				}
+				else if(mode == 2 && z == 0)
+					mode = 1;
+			}
+			// set position / minmax / stop
+			else if(mode == 0) {
+				scount[y] += (z<<1)-1;
+				if(scount[y]<0) scount[y] = 0;		// in case of grid glitch?
+
+				if(z == 1 && scount[y] == 1) {
+					position[y] = x;
+					m.count[y] = x;
 					m.min[y] = x;
-					m.max[y] = m.count[y];
-				}
-				else {
 					m.max[y] = x;
-					m.min[y] = m.count[y];
-				}
-			}
-		}
-		// set speeds and trig/tog
-		else if(mode == 1) {
-			scount[y] += (z<<1)-1;
-			if(scount[y]<0) scount[y] = 0;
+					tick[y] = m.speed[y];
 
-			if(z==1) {
-				if(x > 7) {
-					if(scount[y] == 1) {
-						m.smin[y] = x-8;
-						m.smax[y] = x-8;
-						m.speed[y] = x-8;
-						tick[y] = m.speed[y];
-					}
-					else if(scount[y] == 2) {
-						if(x-8 < m.smin[y]) {
-							m.smax[y] = m.smin[y];
-							m.smin[y] = x-8;
-						}
-						else
-							m.smax[y] = x-8;
+					if(sound) {
+						pushed[y] = 1;
 					}
 				}
-				else if(x == 5) {
-					m.toggle[edit_row] ^= 1<<y;
-					m.trigger[edit_row] &= ~(1<<y);
-				}
-				else if(x == 6) {
-					m.trigger[edit_row] ^= 1<<y;
-					m.toggle[edit_row] &= ~(1<<y);
-				}
-				else if(x == 4) {
-					sound ^= 1;
-				}
-				else if(x == 2) {
-					if(position[y] == -1) {
-						position[y] = m.count[y];
+				else if(z == 1 && scount[y] == 2) {
+					if(x < m.count[y]) {
+						m.min[y] = x;
+						m.max[y] = m.count[y];
 					}
 					else {
-						position[y] = -1;
+						m.max[y] = x;
+						m.min[y] = m.count[y];
 					}
 				}
-				else if(x == 3) {
-					m.sync[edit_row] ^= (1<<y);
-				}
 			}
-		}
-		else if(mode == 2 && z == 1) {
-			if(x > 3 && x < 7) {
-				m.rule_dests[edit_row] = y;
-				m.rule_dest_targets[edit_row] = x-3;
-			  // post("\nrule_dests", edit_row, ":", rule_dests[edit_row]);
+			else if (mode == 1) {
+				handler_MPGridKey_helper_speed(x, y, z, upper_edit_row);
 			}
-			else if(x > 6) {
-				m.rules[edit_row] = y;
-			  // post("\nrules", edit_row, ":", rules[edit_row]);
+			else if (mode == 2 && z == 1) {
+				handler_MPGridKey_helper_rules(x, y, z, upper_edit_row);
 			}
-		}
+        }
+		else if (monome_size_y() == 16 && y > 7) {
+			// lower half of 256
+			if (x == 0) {
+				lower_mode = 1;
+				lower_edit_row = y - 8;
+			}
+			else if (x == 1) {
+				lower_mode = 2;
+				lower_edit_row = y - 8;
+			}
+			else if (lower_mode == 1) {
+				handler_MPGridKey_helper_speed(x, y - 8, z, lower_edit_row);
 
-		monomeFrameDirty++;
+			}
+			else if (lower_mode == 2) {
+				handler_MPGridKey_helper_rules(x, y - 8, z, lower_edit_row);
+			}
+
+		}
+        monomeFrameDirty++;
+	}
+}
+
+void handler_MPGridKey_helper_speed(u8 x, u8 y, u8 z, u8 edit_row)
+{
+	// set speeds and trig/tog
+
+	scount[y] += (z<<1)-1;
+	if(scount[y]<0) scount[y] = 0;
+
+	if(z==1) {
+		if(x > 7) {
+			if(scount[y] == 1) {
+				m.smin[y] = x-8;
+				m.smax[y] = x-8;
+				m.speed[y] = x-8;
+				tick[y] = m.speed[y];
+			}
+			else if(scount[y] == 2) {
+				if(x-8 < m.smin[y]) {
+					m.smax[y] = m.smin[y];
+					m.smin[y] = x-8;
+				}
+				else
+					m.smax[y] = x-8;
+			}
+		}
+		else if(x == 5) {
+			m.toggle[edit_row] ^= 1<<y;
+			m.trigger[edit_row] &= ~(1<<y);
+		}
+		else if(x == 6) {
+			m.trigger[edit_row] ^= 1<<y;
+			m.toggle[edit_row] &= ~(1<<y);
+		}
+		else if(x == 4) {
+			sound ^= 1;
+		}
+		else if(x == 2) {
+			if(position[y] == -1) {
+				position[y] = m.count[y];
+			}
+			else {
+				position[y] = -1;
+			}
+		}
+		else if(x == 3) {
+			m.sync[edit_row] ^= (1<<y);
+		}
+	}
+}
+
+void handler_MPGridKey_helper_rules(u8 x, u8 y, u8 z, u8 edit_row)
+{
+	if(x > 3 && x < 7) {
+		m.rule_dests[edit_row] = y;
+		m.rule_dest_targets[edit_row] = x-3;
+		// post("\nrule_dests", edit_row, ":", rule_dests[edit_row]);
+	}
+	else if(x > 6) {
+		m.rules[edit_row] = y;
+		// post("\nrules", edit_row, ":", rules[edit_row]);
 	}
 }
 
@@ -4561,97 +4600,132 @@ void refresh_mp_config(void) {
 	}
 }
 
-void refresh_mp(void) {
+void refresh_mp_helper_positions(u8* ledBuffer) {
+	u8 i1, i2;
+
+	for(i1=0;i1<8;i1++) {
+		for(i2=m.min[i1];i2<=m.max[i1];i2++)
+			monomeLedBuffer[i1*16 + i2] = L0;
+		monomeLedBuffer[i1*16 + m.count[i1]] = L1;
+		if(position[i1] >= 0) {
+			monomeLedBuffer[i1*16 + position[i1]] = L2;
+		}
+	}
+}
+
+void refresh_mp_helper_speed(u8* ledBuffer, bool positions, u8 edit_row) {
+	u8 i1, i2;
+
+	for(i1=0;i1<8;i1++) {
+		// current position underlay
+		if (positions) {
+			if(position[i1] >= 0)
+				ledBuffer[i1*16 + position[i1]] = L0;
+		}
+
+		// start/stop indicator
+		if(position[i1] != -1)
+			ledBuffer[i1*16 + 2] = 2;
+
+		// speed range
+		for(i2=m.smin[i1];i2<=m.smax[i1];i2++)
+			ledBuffer[i1*16 + i2+8] = L0;
+
+		// current speed
+		ledBuffer[i1*16 + m.speed[i1]+8] = L1;
+
+		if(sound)
+			ledBuffer[i1*16 + 4] = 2;
+
+		if(m.toggle[edit_row] & (1 << i1))
+			ledBuffer[i1*16 + 5] = L2;
+		else
+			ledBuffer[i1*16 + 5] = L0;
+
+		if(m.trigger[edit_row] & (1 << i1))
+			ledBuffer[i1*16 + 6] = L2;
+		else
+			ledBuffer[i1*16 + 6] = L0;
+
+		if(m.sync[edit_row] & (1<<i1))
+			ledBuffer[i1*16 + 3] = L1;
+		else
+			ledBuffer[i1*16 + 3] = L0;
+	}
+
+	ledBuffer[edit_row * 16] = L2;
+}
+
+void refresh_mp_helper_rules(u8* ledBuffer, bool positions, u8 edit_row) {
 	u8 i1, i2, i3;
+
+	// current position underlay
+	if (positions) {
+		for(i1=0;i1<8;i1++)
+			if(position[i1] >= 0)
+				ledBuffer[i1*16 + position[i1]] = L0;
+	}
+	
+	ledBuffer[edit_row * 16] = L1;
+	ledBuffer[edit_row * 16 + 1] = L1;
+
+	if(m.rule_dest_targets[edit_row] == 1) {
+		ledBuffer[m.rule_dests[edit_row] * 16 + 4] = L2;
+		ledBuffer[m.rule_dests[edit_row] * 16 + 5] = L0;
+		ledBuffer[m.rule_dests[edit_row] * 16 + 6] = L0;
+	}
+	else if (m.rule_dest_targets[edit_row] == 2) {
+		ledBuffer[m.rule_dests[edit_row] * 16 + 4] = L0;
+		ledBuffer[m.rule_dests[edit_row] * 16 + 5] = L2;
+		ledBuffer[m.rule_dests[edit_row] * 16 + 6] = L0;
+	}
+	else {
+		ledBuffer[m.rule_dests[edit_row] * 16 + 4] = L2;
+		ledBuffer[m.rule_dests[edit_row] * 16 + 5] = L2;
+		ledBuffer[m.rule_dests[edit_row] * 16 + 6] = L0;
+	}
+
+	for(i1=8;i1<16;i1++)
+		ledBuffer[m.rules[edit_row] * 16 + i1] = L0;
+
+
+	for(i1=0;i1<8;i1++) {
+		i3 = sign[m.rules[edit_row]][i1];
+		for(i2=0;i2<8;i2++) {
+			if((i3 & (1<<i2)) != 0)
+				ledBuffer[i1*16 + 8 + i2] = L2;
+		}
+	}
+}
+
+void refresh_mp(void) {
 
 	// clear grid
 	memset(monomeLedBuffer, 0, MONOME_MAX_LED_BYTES);
 
 	// SHOW POSITIONS
 	if(mode == 0) {
-		for(i1=0;i1<8;i1++) {
-			for(i2=m.min[i1];i2<=m.max[i1];i2++)
-				monomeLedBuffer[i1*16 + i2] = L0;
-			monomeLedBuffer[i1*16 + m.count[i1]] = L1;
-			if(position[i1] >= 0) {
-				monomeLedBuffer[i1*16 + position[i1]] = L2;
-			}
-		}
+		refresh_mp_helper_positions(monomeLedBuffer);
 	}
 	// SHOW SPEED
-	else if(mode == 1) {
-		for(i1=0;i1<8;i1++) {
-			if(position[i1] >= 0)
-				monomeLedBuffer[i1*16 + position[i1]] = L0;
-
-			if(position[i1] != -1)
-				monomeLedBuffer[i1*16 + 2] = 2;
-
-			for(i2=m.smin[i1];i2<=m.smax[i1];i2++)
-				monomeLedBuffer[i1*16 + i2+8] = L0;
-
-			monomeLedBuffer[i1*16 + m.speed[i1]+8] = L1;
-
-			if(sound)
-				monomeLedBuffer[i1*16 + 4] = 2;
-
-			if(m.toggle[edit_row] & (1 << i1))
-				monomeLedBuffer[i1*16 + 5] = L2;
-			else
-				monomeLedBuffer[i1*16 + 5] = L0;
-
-			if(m.trigger[edit_row] & (1 << i1))
-				monomeLedBuffer[i1*16 + 6] = L2;
-			else
-				monomeLedBuffer[i1*16 + 6] = L0;
-
-			if(m.sync[edit_row] & (1<<i1))
-				monomeLedBuffer[i1*16 + 3] = L1;
-			else
-				monomeLedBuffer[i1*16 + 3] = L0;
-		}
-
-		monomeLedBuffer[edit_row * 16] = L2;
-	}
+    else if(mode == 1) {
+        refresh_mp_helper_speed(monomeLedBuffer, true, upper_edit_row);
+        }
 	// SHOW RULES
 	else if(mode == 2) {
-		for(i1=0;i1<8;i1++)
-			if(position[i1] >= 0)
-				monomeLedBuffer[i1*16 + position[i1]] = L0;
+		refresh_mp_helper_rules(monomeLedBuffer, true, upper_edit_row);
+	}
 
-		monomeLedBuffer[edit_row * 16] = L1;
-		monomeLedBuffer[edit_row * 16 + 1] = L1;
-
-		if(m.rule_dest_targets[edit_row] == 1) {
-			monomeLedBuffer[m.rule_dests[edit_row] * 16 + 4] = L2;
-			monomeLedBuffer[m.rule_dests[edit_row] * 16 + 5] = L0;
-			monomeLedBuffer[m.rule_dests[edit_row] * 16 + 6] = L0;
+	if (monome_size_y() == 16)
+	{
+		if (lower_mode == 1) {
+			refresh_mp_helper_speed(monomeLedBuffer + 128, false, lower_edit_row);
 		}
-		else if (m.rule_dest_targets[edit_row] == 2) {
-			monomeLedBuffer[m.rule_dests[edit_row] * 16 + 4] = L0;
-			monomeLedBuffer[m.rule_dests[edit_row] * 16 + 5] = L2;
-			monomeLedBuffer[m.rule_dests[edit_row] * 16 + 6] = L0;
-		}
-		else {
-			monomeLedBuffer[m.rule_dests[edit_row] * 16 + 4] = L2;
-			monomeLedBuffer[m.rule_dests[edit_row] * 16 + 5] = L2;
-			monomeLedBuffer[m.rule_dests[edit_row] * 16 + 6] = L0;
-		}
-
-		for(i1=8;i1<16;i1++)
-			monomeLedBuffer[m.rules[edit_row] * 16 + i1] = L0;
-
-
-		for(i1=0;i1<8;i1++) {
-			i3 = sign[m.rules[edit_row]][i1];
-			for(i2=0;i2<8;i2++) {
-				if((i3 & (1<<i2)) != 0)
-					monomeLedBuffer[i1*16 + 8 + i2] = L2;
-			}
+		else if (lower_mode == 2) {
+			refresh_mp_helper_rules(monomeLedBuffer + 128, false, lower_edit_row);
 		}
 	}
 }
-
 
 void calc_scale(uint8_t s) {
 	cur_scale[0] = scale_data[s][0];
